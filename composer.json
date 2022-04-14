@@ -1,0 +1,42 @@
+{
+    "name": "brzuchal/scheduler",
+    "type": "library",
+    "description": "Scheduling messages with recurring options",
+    "homepage": "https://github.com/brzuchal/scheduler",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Michał Marcin Brzuchalski",
+            "email": "michal.brzuchalski@gmail.com",
+            "role": "Maintainer"
+        }
+    ],
+    "require": {
+        "php": "8.1.*",
+        "ext-pdo": "*"
+    },
+    "require-dev": {
+        "doctrine/coding-standard": "^9.0",
+        "phpunit/phpunit": "^9.5",
+        "vimeo/psalm": "^4.21"
+    },
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Brzuchal\\Scheduler\\": "src/"
+        },
+        "exclude-from-classmap": [
+            "**/Tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Brzuchal\\Scheduler\\Tests\\": "src/Tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

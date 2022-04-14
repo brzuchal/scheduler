@@ -1,0 +1,14 @@
+= Introduction
+
+Scheduler component is a library which implements persistent storage for
+any kind of message objects for all the idle time before it actually should be
+dispatched for handling.
+
+== Installation
+
+This is a Composer package library, to install it run:
+[source,bash]
+----
+composer install brzuchal/scheduler
+----
+
