@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Brzuchal\Scheduler\Store;
 
+use Brzuchal\RecurrenceRule\Rule;
+use Brzuchal\RecurrenceRule\RuleFactory;
 use Brzuchal\Scheduler\ScheduleState;
-use DateInterval;
 use DateTimeImmutable;
 use Exception;
 use PDO;
@@ -36,7 +37,7 @@ final class PdoScheduleStore implements ScheduleStore
     public function findSchedule(string $identifier): ScheduleStoreEntry
     {
         $sql = sprintf(
-            'SELECT `trigger_at`, `serialized`, `interval` FROM %s WHERE `id` = ?',
+            'SELECT `trigger_at`, `serialized`, `rule`, `start_at` FROM %s WHERE `id` = ?',
             $this->dataTableName,
         );
         $stmt = $this->pdo->prepare($sql);
@@ -50,16 +51,19 @@ final class PdoScheduleStore implements ScheduleStore
         [
             'trigger_at' => $triggerAt,
             'serialized' => $serialized,
-            'interval' => $interval,
+            'rule' => $rule,
+            'start_at' => $startAt,
         ] = $entry;
         assert(is_string($triggerAt));
         assert(is_string($serialized));
-        assert((! empty($interval) && is_string($interval)) || $interval === null);
+        assert((! empty($rule) && is_string($rule)) || $rule === null);
+        assert((! empty($startAt) && is_string($startAt)) || $startAt === null);
 
         return new SimpleScheduleStoreEntry(
             new DateTimeImmutable($triggerAt),
             unserialize($serialized),
-            $interval ? new DateInterval($interval) : null,
+            $rule ? RuleFactory::fromString($rule) : null,
+            $startAt ? new DateTimeImmutable($startAt) : null,
         );
     }
 
@@ -67,10 +71,11 @@ final class PdoScheduleStore implements ScheduleStore
         string $identifier,
         DateTimeImmutable $triggerDateTime,
         object $message,
-        DateInterval|null $interval = null,
+        Rule|null $rule = null,
+        DateTimeImmutable|null $startDateTime = null,
     ): void {
         $sql = sprintf(
-            'INSERT INTO %s (`id`, `trigger_at`, `serialized`, `interval`, `state`) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO %s (`id`, `trigger_at`, `serialized`, `rule`, `start_at`, `state`) VALUES (?, ?, ?, ?, ?, ?)',
             $this->dataTableName,
         );
         $stmt = $this->pdo->prepare($sql);
@@ -78,13 +83,17 @@ final class PdoScheduleStore implements ScheduleStore
             $identifier,
             $triggerDateTime,
             serialize($message),
-            $interval,
+            $rule?->toString(),
+            $startDateTime,
             ScheduleState::Pending->value,
         ]);
     }
 
-    public function updateSchedule(string $identifier, DateTimeImmutable $triggerDateTime, ScheduleState $state,): void
-    {
+    public function updateSchedule(
+        string $identifier,
+        DateTimeImmutable $triggerDateTime,
+        ScheduleState $state,
+    ): void {
         $sql = sprintf(
             'UPDATE %s SET `trigger_at` = ?, `state` = ? WHERE `id` = ?',
             $this->dataTableName,

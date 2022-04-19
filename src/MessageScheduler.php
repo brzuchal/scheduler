@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Brzuchal\Scheduler;
 
+use Brzuchal\RecurrenceRule\Rule;
 use Brzuchal\Scheduler\Store\ScheduleStore;
-use DateInterval;
 use DateTimeImmutable;
 use Exception;
 
@@ -27,7 +27,8 @@ final class MessageScheduler
     public function schedule(
         DateTimeImmutable $triggerDateTime,
         object $message,
-        DateInterval|null $interval = null,
+        Rule|null $rule = null,
+        DateTimeImmutable|null $start = null,
     ): ScheduleToken {
         if ($triggerDateTime < (new DateTimeImmutable('now'))) {
             throw PastSchedulingNotPossible::create($triggerDateTime);
@@ -35,7 +36,13 @@ final class MessageScheduler
 
         $identifier = hash('sha256', random_bytes(1024));
         assert(! empty($identifier));
-        $this->store->insertSchedule($identifier, $triggerDateTime, $message, $interval);
+        $this->store->insertSchedule(
+            $identifier,
+            $triggerDateTime,
+            $message,
+            $rule,
+            $start,
+        );
 
         return new ScheduleToken($identifier);
     }
@@ -47,11 +54,17 @@ final class MessageScheduler
         ScheduleToken $token,
         DateTimeImmutable $triggerDateTime,
         object $message,
-        DateInterval|null $interval = null,
+        Rule|null $rule = null,
+        DateTimeImmutable|null $startDateTime = null,
     ): ScheduleToken {
         $this->cancel($token);
 
-        return $this->schedule($triggerDateTime, $message, $interval);
+        return $this->schedule(
+            $triggerDateTime,
+            $message,
+            $rule,
+            $startDateTime,
+        );
     }
 
     public function cancel(ScheduleToken $token): void

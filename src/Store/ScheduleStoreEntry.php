@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Brzuchal\Scheduler\Store;
 
-use DateInterval;
+use Brzuchal\RecurrenceRule\Rule;
 use DateTimeImmutable;
 
 interface ScheduleStoreEntry
@@ -13,5 +13,7 @@ interface ScheduleStoreEntry
 
     public function message(): object;
 
-    public function interval(): DateInterval|null;
+    public function rule(): Rule|null;
+
+    public function startDateTime(): DateTimeImmutable|null;
 }

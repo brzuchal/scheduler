@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Brzuchal\Scheduler\Store;
 
-use DateInterval;
+use Brzuchal\RecurrenceRule\Rule;
 use DateTimeImmutable;
 
 final class SimpleScheduleStoreEntry implements ScheduleStoreEntry
@@ -12,7 +12,8 @@ final class SimpleScheduleStoreEntry implements ScheduleStoreEntry
     public function __construct(
         protected DateTimeImmutable $triggerDateTime,
         protected object $message,
-        protected DateInterval|null $interval,
+        protected Rule|null $rule,
+        protected DateTimeImmutable|null $startDateTime
     ) {
     }
 
@@ -26,8 +27,13 @@ final class SimpleScheduleStoreEntry implements ScheduleStoreEntry
         return $this->message;
     }
 
-    public function interval(): DateInterval|null
+    public function rule(): Rule|null
     {
-        return $this->interval;
+        return $this->rule;
+    }
+
+    public function startDateTime(): DateTimeImmutable|null
+    {
+        return $this->startDateTime;
     }
 }

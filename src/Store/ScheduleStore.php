@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Brzuchal\Scheduler\Store;
 
+use Brzuchal\RecurrenceRule\Rule;
 use Brzuchal\Scheduler\ScheduleState;
-use DateInterval;
 use DateTimeImmutable;
 
 interface ScheduleStore
@@ -16,7 +16,8 @@ interface ScheduleStore
         string $identifier,
         DateTimeImmutable $triggerDateTime,
         object $message,
-        DateInterval|null $interval = null,
+        Rule|null $rule = null,
+        DateTimeImmutable|null $startDateTime = null
     ): void;
 
     public function updateSchedule(

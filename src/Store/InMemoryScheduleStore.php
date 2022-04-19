@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Brzuchal\Scheduler\Store;
 
+use Brzuchal\RecurrenceRule\Rule;
 use Brzuchal\Scheduler\ScheduleState;
-use DateInterval;
 use DateTimeImmutable;
 
 final class InMemoryScheduleStore implements ScheduleStore
@@ -33,12 +33,14 @@ final class InMemoryScheduleStore implements ScheduleStore
         string $identifier,
         DateTimeImmutable $triggerDateTime,
         object $message,
-        DateInterval|null $interval = null,
+        Rule|null $rule = null,
+        DateTimeImmutable|null $startDateTime = null,
     ): void {
         $this->schedules[ScheduleState::Pending->value][$identifier] = new SimpleScheduleStoreEntry(
             $triggerDateTime,
             $message,
-            $interval,
+            $rule,
+            $startDateTime,
         );
     }
 
@@ -48,7 +50,8 @@ final class InMemoryScheduleStore implements ScheduleStore
         $this->schedules[$state->value][$identifier] = new SimpleScheduleStoreEntry(
             $triggerDateTime,
             $schedule->message(),
-            $schedule->interval(),
+            $schedule->rule(),
+            $schedule->startDateTime(),
         );
         if ($state === ScheduleState::Pending) {
             return;
