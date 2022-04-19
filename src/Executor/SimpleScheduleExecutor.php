@@ -44,6 +44,8 @@ final class SimpleScheduleExecutor implements ScheduleExecutor
                 $identifier,
                 $date,
                 ScheduleState::Pending,
+                $rule,
+                $start,
             );
 
             break;

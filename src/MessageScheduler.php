@@ -6,6 +6,7 @@ namespace Brzuchal\Scheduler;
 
 use Brzuchal\RecurrenceRule\Rule;
 use Brzuchal\Scheduler\Store\ScheduleStore;
+use Brzuchal\Scheduler\Store\SetupableScheduleStore;
 use DateTimeImmutable;
 use Exception;
 
@@ -36,6 +37,10 @@ final class MessageScheduler
 
         $identifier = hash('sha256', random_bytes(1024));
         assert(! empty($identifier));
+        if ($this->store instanceof SetupableScheduleStore) {
+            $this->store->setup();
+        }
+
         $this->store->insertSchedule(
             $identifier,
             $triggerDateTime,
@@ -67,8 +72,31 @@ final class MessageScheduler
         );
     }
 
+    public function update(
+        ScheduleToken $token,
+        Rule|null $rule,
+        DateTimeImmutable|null $startDateTime = null,
+    ): void {
+        if ($this->store instanceof SetupableScheduleStore) {
+            $this->store->setup();
+        }
+
+        $schedule = $this->store->findSchedule($token->tokenId);
+        $this->store->updateSchedule(
+            $token->tokenId,
+            $schedule->triggerDateTime(),
+            ScheduleState::Pending,
+            $rule,
+            $startDateTime,
+        );
+    }
+
     public function cancel(ScheduleToken $token): void
     {
+        if ($this->store instanceof SetupableScheduleStore) {
+            $this->store->setup();
+        }
+
         $this->store->deleteSchedule($token->tokenId);
     }
 }

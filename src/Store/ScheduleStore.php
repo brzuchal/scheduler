@@ -24,6 +24,8 @@ interface ScheduleStore
         string $identifier,
         DateTimeImmutable $triggerDateTime,
         ScheduleState $state,
+        Rule|null $rule = null,
+        DateTimeImmutable|null $startDateTime = null
     ): void;
 
     public function deleteSchedule(string $identifier): void;

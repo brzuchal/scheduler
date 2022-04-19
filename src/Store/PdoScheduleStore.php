@@ -93,15 +93,19 @@ final class PdoScheduleStore implements ScheduleStore
         string $identifier,
         DateTimeImmutable $triggerDateTime,
         ScheduleState $state,
+        Rule|null $rule = null,
+        DateTimeImmutable|null $startDateTime = null
     ): void {
         $sql = sprintf(
-            'UPDATE %s SET `trigger_at` = ?, `state` = ? WHERE `id` = ?',
+            'UPDATE %s SET `trigger_at` = ?, `state` = ?, `rule` = ?, `start_at` = ? WHERE `id` = ?',
             $this->dataTableName,
         );
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $triggerDateTime,
             $state->value,
+            $rule?->toString(),
+            $startDateTime,
             $identifier,
         ]);
     }

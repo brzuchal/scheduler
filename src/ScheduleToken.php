@@ -11,4 +11,9 @@ final class ScheduleToken
         public readonly string $tokenId,
     ) {
     }
+
+    public function __toString(): string
+    {
+        return $this->tokenId;
+    }
 }

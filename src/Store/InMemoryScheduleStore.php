@@ -44,14 +44,19 @@ final class InMemoryScheduleStore implements ScheduleStore
         );
     }
 
-    public function updateSchedule(string $identifier, DateTimeImmutable $triggerDateTime, ScheduleState $state): void
-    {
+    public function updateSchedule(
+        string $identifier,
+        DateTimeImmutable $triggerDateTime,
+        ScheduleState $state,
+        Rule|null $rule = null,
+        DateTimeImmutable|null $startDateTime = null
+    ): void {
         $schedule = $this->schedules[ScheduleState::Pending->value][$identifier];
         $this->schedules[$state->value][$identifier] = new SimpleScheduleStoreEntry(
             $triggerDateTime,
             $schedule->message(),
-            $schedule->rule(),
-            $schedule->startDateTime(),
+            $rule,
+            $startDateTime,
         );
         if ($state === ScheduleState::Pending) {
             return;

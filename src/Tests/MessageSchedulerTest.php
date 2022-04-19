@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Brzuchal\Scheduler\Tests;
 
+use Brzuchal\RecurrenceRule\Freq;
+use Brzuchal\RecurrenceRule\Rule;
 use Brzuchal\Scheduler\MessageScheduler;
 use Brzuchal\Scheduler\PastSchedulingNotPossible;
 use Brzuchal\Scheduler\Store\InMemoryScheduleStore;
@@ -57,5 +59,25 @@ class MessageSchedulerTest extends TestCase
         $schedule = $this->store->findSchedule($schedules[0]);
         $this->assertEquals($triggerAt, $schedule->triggerDateTime());
         $this->assertEquals($message, $schedule->message());
+    }
+
+    public function testUpdate(): void
+    {
+        $scheduler = new MessageScheduler($this->store);
+        $triggerAt = (new DateTimeImmutable('now'))->add(new DateInterval('PT1S'));
+        $message = new FooMessage();
+        $token = $scheduler->schedule($triggerAt, $message);
+        $startDateTime = new DateTimeImmutable('today');
+        $rule = new Rule(Freq::Yearly);
+        $scheduler->update($token, $rule, $startDateTime);
+        sleep(1);
+        $schedules = $this->store->findPendingSchedules(new DateTimeImmutable('now'));
+        $this->assertNotEmpty($schedules);
+        $this->assertContainsOnly('string', $schedules);
+        $schedule = $this->store->findSchedule($schedules[0]);
+        $this->assertEquals($triggerAt, $schedule->triggerDateTime());
+        $this->assertEquals($message, $schedule->message());
+        $this->assertEquals($rule, $schedule->rule());
+        $this->assertEquals($startDateTime, $schedule->startDateTime());
     }
 }
