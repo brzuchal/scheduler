@@ -14,7 +14,8 @@
     "require": {
         "php": "8.1.*",
         "ext-pdo": "*",
-        "brzuchal/recurrence-rules": "1.x-dev"
+        "brzuchal/recurrence-rules": "1.x-dev",
+        "ramsey/uuid": "^4.3"
     },
     "require-dev": {
         "doctrine/coding-standard": "^9.0",

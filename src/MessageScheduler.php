@@ -9,10 +9,9 @@ use Brzuchal\Scheduler\Store\ScheduleStore;
 use Brzuchal\Scheduler\Store\SetupableScheduleStore;
 use DateTimeImmutable;
 use Exception;
+use Ramsey\Uuid\Uuid;
 
 use function assert;
-use function hash;
-use function random_bytes;
 
 final class MessageScheduler
 {
@@ -35,8 +34,7 @@ final class MessageScheduler
             throw PastSchedulingNotPossible::create($triggerDateTime);
         }
 
-        $identifier = hash('sha256', random_bytes(1024));
-        assert(! empty($identifier));
+        $identifier = Uuid::uuid4()->toString();
         if ($this->store instanceof SetupableScheduleStore) {
             $this->store->setup();
         }
