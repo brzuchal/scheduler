@@ -6,12 +6,9 @@ namespace Brzuchal\Scheduler;
 
 use Brzuchal\RecurrenceRule\Rule;
 use Brzuchal\Scheduler\Store\ScheduleStore;
-use Brzuchal\Scheduler\Store\SetupableScheduleStore;
 use DateTimeImmutable;
 use Exception;
 use Ramsey\Uuid\Uuid;
-
-use function assert;
 
 final class MessageScheduler
 {
@@ -30,10 +27,6 @@ final class MessageScheduler
         DateTimeImmutable|null $startDateTime = null,
     ): ScheduleToken {
         $identifier = Uuid::uuid4()->toString();
-        if ($this->store instanceof SetupableScheduleStore) {
-            $this->store->setup();
-        }
-
         $this->store->insertSchedule(
             $identifier,
             $triggerDateTime,
@@ -67,10 +60,6 @@ final class MessageScheduler
         Rule|null $rule,
         DateTimeImmutable|null $startDateTime = null,
     ): void {
-        if ($this->store instanceof SetupableScheduleStore) {
-            $this->store->setup();
-        }
-
         $schedule = $this->store->findSchedule($token->tokenId);
         $this->store->updateSchedule(
             $token->tokenId,
@@ -83,10 +72,6 @@ final class MessageScheduler
 
     public function cancel(ScheduleToken $token): void
     {
-        if ($this->store instanceof SetupableScheduleStore) {
-            $this->store->setup();
-        }
-
         $this->store->deleteSchedule($token->tokenId);
     }
 }
