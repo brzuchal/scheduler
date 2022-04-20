@@ -53,7 +53,7 @@ class MessageSchedulerTest extends TestCase
         $this->assertEquals($message, $schedule->message());
     }
 
-    public function testUpdate(): void
+    public function testReschedule(): void
     {
         $scheduler = new MessageScheduler($this->store);
         $triggerAt = (new DateTimeImmutable('now'))->add(new DateInterval('PT1S'));
@@ -61,7 +61,7 @@ class MessageSchedulerTest extends TestCase
         $token = $scheduler->schedule($triggerAt, $message);
         $startDateTime = new DateTimeImmutable('today');
         $rule = new Rule(Freq::Yearly);
-        $scheduler->update($token, $rule, $startDateTime);
+        $scheduler->reschedule($token, $triggerAt, $message, $rule, $startDateTime);
         sleep(1);
         $schedules = $this->store->findPendingSchedules(new DateTimeImmutable('now'));
         $this->assertNotEmpty($schedules);

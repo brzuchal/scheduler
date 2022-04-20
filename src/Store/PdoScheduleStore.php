@@ -13,6 +13,7 @@ use PDO;
 
 use function array_map;
 use function assert;
+use function implode;
 use function is_string;
 use function serialize;
 use function sprintf;
@@ -20,13 +21,11 @@ use function unserialize;
 
 final class PdoScheduleStore implements ScheduleStore
 {
-    public const DEFAULT_EXECUTIONS_TABLE_NAME = 'schedule_exec';
-    public const DEFAULT_DATA_TABLE_NAME = 'schedule_data';
+    public const MESSAGES_TABLE_NAME = 'schedule_data';
 
     public function __construct(
         protected PDO $pdo,
-        protected string $executionTableName = self::DEFAULT_EXECUTIONS_TABLE_NAME,
-        protected string $dataTableName = self::DEFAULT_DATA_TABLE_NAME,
+        protected string $messagesTableName = self::MESSAGES_TABLE_NAME,
     ) {
     }
 
@@ -38,7 +37,7 @@ final class PdoScheduleStore implements ScheduleStore
     {
         $sql = sprintf(
             'SELECT `trigger_at`, `serialized`, `rule`, `start_at` FROM %s WHERE `id` = ?',
-            $this->dataTableName,
+            $this->messagesTableName,
         );
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$identifier]);
@@ -74,11 +73,10 @@ final class PdoScheduleStore implements ScheduleStore
         Rule|null $rule = null,
         DateTimeImmutable|null $startDateTime = null,
     ): void {
-        $sql = sprintf(
+        $stmt = $this->pdo->prepare(sprintf(
             'INSERT INTO %s (`id`, `trigger_at`, `serialized`, `rule`, `start_at`, `state`) VALUES (?, ?, ?, ?, ?, ?)',
-            $this->dataTableName,
-        );
-        $stmt = $this->pdo->prepare($sql);
+            $this->messagesTableName,
+        ));
         $stmt->execute([
             $identifier,
             $triggerDateTime,
@@ -91,30 +89,29 @@ final class PdoScheduleStore implements ScheduleStore
 
     public function updateSchedule(
         string $identifier,
-        DateTimeImmutable $triggerDateTime,
         ScheduleState $state,
-        Rule|null $rule = null,
-        DateTimeImmutable|null $startDateTime = null
+        DateTimeImmutable|null $triggerDateTime = null,
     ): void {
-        $sql = sprintf(
-            'UPDATE %s SET `trigger_at` = ?, `state` = ?, `rule` = ?, `start_at` = ? WHERE `id` = ?',
-            $this->dataTableName,
-        );
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([
-            $triggerDateTime,
-            $state->value,
-            $rule?->toString(),
-            $startDateTime,
-            $identifier,
-        ]);
+        $set = ['`state` = ?'];
+        $params = [$state->value];
+        if ($triggerDateTime) {
+            $set[] = '`trigger_at` = ?';
+            $params[] = $triggerDateTime;
+        }
+
+        $stmt = $this->pdo->prepare(sprintf(
+            'UPDATE %s SET %s WHERE `id` = ?',
+            $this->messagesTableName,
+            implode(', ', $set),
+        ));
+        $stmt->execute($params + [$identifier]);
     }
 
     public function deleteSchedule(string $identifier): void
     {
         $sql = sprintf(
             'DELETE FROM %s WHERE `id` = ?',
-            $this->dataTableName,
+            $this->messagesTableName,
         );
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$identifier]);
@@ -138,8 +135,8 @@ final class PdoScheduleStore implements ScheduleStore
 
         $sql = sprintf(
             'SELECT `id` FROM %s WHERE %s',
-            $this->dataTableName,
-            \implode(' AND ', $where),
+            $this->messagesTableName,
+            implode(' AND ', $where),
         );
         if ($limit > 0) {
             $sql .= ' LIMIT ?';

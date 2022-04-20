@@ -8,6 +8,9 @@ use Brzuchal\RecurrenceRule\Rule;
 use Brzuchal\Scheduler\ScheduleState;
 use DateTimeImmutable;
 
+use function array_key_exists;
+use function assert;
+
 final class InMemoryScheduleStore implements ScheduleStore
 {
     // phpcs:disable
@@ -18,6 +21,7 @@ final class InMemoryScheduleStore implements ScheduleStore
     public function __construct()
     {
         $this->schedules = [
+            ScheduleState::Completed->value => [],
             ScheduleState::Pending->value => [],
             ScheduleState::InProgress->value => [],
             ScheduleState::Rejected->value => [],
@@ -46,23 +50,28 @@ final class InMemoryScheduleStore implements ScheduleStore
 
     public function updateSchedule(
         string $identifier,
-        DateTimeImmutable $triggerDateTime,
         ScheduleState $state,
-        Rule|null $rule = null,
-        DateTimeImmutable|null $startDateTime = null
+        DateTimeImmutable|null $triggerDateTime = null,
     ): void {
-        $schedule = $this->schedules[ScheduleState::Pending->value][$identifier];
-        $this->schedules[$state->value][$identifier] = new SimpleScheduleStoreEntry(
-            $triggerDateTime,
-            $schedule->message(),
-            $rule,
-            $startDateTime,
-        );
-        if ($state === ScheduleState::Pending) {
-            return;
-        }
+        foreach (ScheduleState::cases() as $case) {
+            if (! array_key_exists($case->value, $this->schedules)) {
+                continue;
+            }
 
-        unset($this->schedules[ScheduleState::Pending->value][$identifier]);
+            if ($case === $state) {
+                return;
+            }
+
+            $schedule = $this->schedules[$case->value][$identifier];
+            assert($schedule instanceof SimpleScheduleStoreEntry);
+            $this->schedules[$state->value][$identifier] = new SimpleScheduleStoreEntry(
+                $triggerDateTime ?? $schedule->triggerDateTime(),
+                $schedule->message(),
+                $schedule->rule(),
+                $schedule->startDateTime(),
+            );
+            unset($this->schedules[$case->value][$identifier]);
+        }
     }
 
     /**

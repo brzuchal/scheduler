@@ -55,21 +55,6 @@ final class MessageScheduler
         );
     }
 
-    public function update(
-        ScheduleToken $token,
-        Rule|null $rule,
-        DateTimeImmutable|null $startDateTime = null,
-    ): void {
-        $schedule = $this->store->findSchedule($token->tokenId);
-        $this->store->updateSchedule(
-            $token->tokenId,
-            $schedule->triggerDateTime(),
-            ScheduleState::Pending,
-            $rule,
-            $startDateTime,
-        );
-    }
-
     public function cancel(ScheduleToken $token): void
     {
         $this->store->deleteSchedule($token->tokenId);

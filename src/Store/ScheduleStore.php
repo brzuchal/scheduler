@@ -10,8 +10,14 @@ use DateTimeImmutable;
 
 interface ScheduleStore
 {
+    /**
+     * Retrieve existing schedule entry identified by given identifier.
+     */
     public function findSchedule(string $identifier): ScheduleStoreEntry;
 
+    /**
+     * Creates a new schedule entry with {@see ScheduleState::Pending} state.
+     */
     public function insertSchedule(
         string $identifier,
         DateTimeImmutable $triggerDateTime,
@@ -20,17 +26,25 @@ interface ScheduleStore
         DateTimeImmutable|null $startDateTime = null
     ): void;
 
+    /**
+     * Updates an existing schedule entry state on various operations like cancelling or
+     * updating new triggerDateTime when scheduling is controlled by recurrence rule.
+     */
     public function updateSchedule(
         string $identifier,
-        DateTimeImmutable $triggerDateTime,
         ScheduleState $state,
-        Rule|null $rule = null,
-        DateTimeImmutable|null $startDateTime = null
+        DateTimeImmutable|null $triggerDateTime = null,
     ): void;
 
+    /**
+     * Deletes an existing schedule entry if it exists. In other cases do nothing.
+     */
     public function deleteSchedule(string $identifier): void;
 
     /**
+     * Retrieves a list of schedule identifiers optionally narrowed down by date or limited
+     * where state matches {@see ScheduleState::Pending}
+     *
      * @return iterable<string> List of identifiers
      */
     public function findPendingSchedules(

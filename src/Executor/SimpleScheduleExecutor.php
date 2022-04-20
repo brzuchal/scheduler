@@ -10,6 +10,7 @@ use Brzuchal\Scheduler\ScheduleState;
 use Brzuchal\Scheduler\Store\ScheduleStore;
 use Closure;
 use DateTimeImmutable;
+use UnexpectedValueException;
 
 final class SimpleScheduleExecutor implements ScheduleExecutor
 {
@@ -22,31 +23,29 @@ final class SimpleScheduleExecutor implements ScheduleExecutor
     public function execute(string $identifier): void
     {
         $schedule = $this->store->findSchedule($identifier);
+        $this->store->updateSchedule($identifier, ScheduleState::InProgress);
         ($this->dispatcher)($schedule->message());
         $rule = $schedule->rule();
         if ($rule === null) {
-            // TODO: mark as done
+            $this->store->updateSchedule($identifier, ScheduleState::Completed);
+
             return;
         }
 
         $start = $schedule->startDateTime();
         if ($start === null) {
-            throw new \UnexpectedValueException('Missing start time');
+            throw new UnexpectedValueException(
+                'Scheduled message include recurrence rule but no start time',
+            );
         }
 
         $now = new DateTimeImmutable('now');
-        foreach (new RuleIterator($start, $rule) as $date) {
-            if ($date < $now) {
+        foreach (new RuleIterator($start, $rule) as $occurrence) {
+            if ($occurrence < $now) {
                 continue;
             }
 
-            $this->store->updateSchedule(
-                $identifier,
-                $date,
-                ScheduleState::Pending,
-                $rule,
-                $start,
-            );
+            $this->store->updateSchedule($identifier, ScheduleState::Pending, $occurrence);
 
             break;
         }
