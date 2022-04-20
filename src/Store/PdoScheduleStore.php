@@ -125,17 +125,29 @@ final class PdoScheduleStore implements ScheduleStore
      *
      * @psalm-suppress MoreSpecificReturnType
      */
-    public function findPendingSchedules(DateTimeImmutable $date): iterable
-    {
+    public function findPendingSchedules(
+        DateTimeImmutable|null $beforeDateTime = null,
+        int|null $limit = null,
+    ): array {
+        $where = ['`state` = ?'];
+        $params = [ScheduleState::Pending->value];
+        if ($beforeDateTime !== null) {
+            $where[] = '`trigger_at` < ?';
+            $params[] = $beforeDateTime;
+        }
+
         $sql = sprintf(
-            'SELECT `id` FROM %s WHERE `trigger_at` < ? AND `state` = ?',
+            'SELECT `id` FROM %s WHERE %s',
             $this->dataTableName,
+            \implode(' AND ', $where),
         );
+        if ($limit > 0) {
+            $sql .= ' LIMIT ?';
+            $params[] = $limit;
+        }
+
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([
-            $date,
-            ScheduleState::Pending->value,
-        ]);
+        $stmt->execute($params);
         $pending = [];
         while ($entry = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $pending[] = $entry;

@@ -33,5 +33,8 @@ interface ScheduleStore
     /**
      * @return iterable<string> List of identifiers
      */
-    public function findPendingSchedules(DateTimeImmutable $date): iterable;
+    public function findPendingSchedules(
+        DateTimeImmutable|null $beforeDateTime = null,
+        int|null $limit = null
+    ): iterable;
 }

@@ -68,12 +68,18 @@ final class InMemoryScheduleStore implements ScheduleStore
     /**
      * @psalm-return list<non-empty-string>
      */
-    public function findPendingSchedules(DateTimeImmutable $date): array
-    {
+    public function findPendingSchedules(
+        DateTimeImmutable|null $beforeDateTime = null,
+        int|null $limit = null,
+    ): array {
         $pending = [];
         foreach ($this->schedules[ScheduleState::Pending->value] as $identifier => $schedule) {
-            if ($schedule->triggerDateTime() > $date) {
+            if ($beforeDateTime !== null && $schedule->triggerDateTime() > $beforeDateTime) {
                 continue;
+            }
+
+            if ($limit !== null && --$limit < 0) {
+                break;
             }
 
             $pending[] = $identifier;

@@ -7,7 +7,6 @@ namespace Brzuchal\Scheduler\Tests;
 use Brzuchal\RecurrenceRule\Freq;
 use Brzuchal\RecurrenceRule\Rule;
 use Brzuchal\Scheduler\MessageScheduler;
-use Brzuchal\Scheduler\PastSchedulingNotPossible;
 use Brzuchal\Scheduler\Store\InMemoryScheduleStore;
 use Brzuchal\Scheduler\Store\ScheduleStore;
 use Brzuchal\Scheduler\Tests\Fixtures\FooMessage;
@@ -37,13 +36,6 @@ class MessageSchedulerTest extends TestCase
         $schedules = $this->store->findPendingSchedules(new DateTimeImmutable('now'));
         $this->assertNotEmpty($schedules);
         $this->assertContainsOnly('string', $schedules);
-    }
-
-    public function testCreationNotPossible(): void
-    {
-        $this->expectException(PastSchedulingNotPossible::class);
-        $scheduler = new MessageScheduler($this->store);
-        $scheduler->schedule(new DateTimeImmutable('yesterday'), new FooMessage());
     }
 
     public function testFetchPending(): void

@@ -21,19 +21,14 @@ final class MessageScheduler
     }
 
     /**
-     * @throws PastSchedulingNotPossible
      * @throws Exception
      */
     public function schedule(
         DateTimeImmutable $triggerDateTime,
         object $message,
         Rule|null $rule = null,
-        DateTimeImmutable|null $start = null,
+        DateTimeImmutable|null $startDateTime = null,
     ): ScheduleToken {
-        if ($triggerDateTime < (new DateTimeImmutable('now'))) {
-            throw PastSchedulingNotPossible::create($triggerDateTime);
-        }
-
         $identifier = Uuid::uuid4()->toString();
         if ($this->store instanceof SetupableScheduleStore) {
             $this->store->setup();
@@ -44,15 +39,12 @@ final class MessageScheduler
             $triggerDateTime,
             $message,
             $rule,
-            $start,
+            $startDateTime,
         );
 
         return new ScheduleToken($identifier);
     }
 
-    /**
-     * @throws PastSchedulingNotPossible
-     */
     public function reschedule(
         ScheduleToken $token,
         DateTimeImmutable $triggerDateTime,
