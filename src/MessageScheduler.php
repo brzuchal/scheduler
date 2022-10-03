@@ -41,17 +41,14 @@ final class MessageScheduler
     public function reschedule(
         ScheduleToken $token,
         DateTimeImmutable $triggerDateTime,
-        object $message,
         Rule|null $rule = null,
-        DateTimeImmutable|null $startDateTime = null,
-    ): ScheduleToken {
-        $this->cancel($token);
-
-        return $this->schedule(
-            $triggerDateTime,
-            $message,
-            $rule,
-            $startDateTime,
+    ): void {
+        $entry = $this->store->findSchedule($token->tokenId);
+        $this->store->updateSchedule(
+            identifier: $token->tokenId,
+            state: ScheduleState::Pending,
+            triggerDateTime: $triggerDateTime,
+            rule: $rule ?? $entry->rule(),
         );
     }
 

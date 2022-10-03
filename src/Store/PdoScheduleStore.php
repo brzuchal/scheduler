@@ -74,15 +74,18 @@ final class PdoScheduleStore implements ScheduleStore
         DateTimeImmutable|null $startDateTime = null,
     ): void {
         $stmt = $this->pdo->prepare(sprintf(
-            'INSERT INTO %s (`id`, `trigger_at`, `serialized`, `rule`, `start_at`, `state`) VALUES (?, ?, ?, ?, ?, ?)',
+            <<<SQL
+                INSERT INTO %s (`id`, `trigger_at`, `serialized`, `rule`, `start_at`, `state`, `created_at`) 
+                VALUES (?, ?, ?, ?, ?, ?, DATETIME("now"))
+            SQL,
             $this->messagesTableName,
         ));
         $stmt->execute([
             $identifier,
-            $triggerDateTime,
+            $triggerDateTime->format('Y-m-d H:i:s'),
             serialize($message),
             $rule?->toString(),
-            $startDateTime,
+            $startDateTime?->format('Y-m-d H:i:s'),
             ScheduleState::Pending->value,
         ]);
     }
@@ -91,12 +94,18 @@ final class PdoScheduleStore implements ScheduleStore
         string $identifier,
         ScheduleState $state,
         DateTimeImmutable|null $triggerDateTime = null,
+        Rule|null $rule = null,
     ): void {
         $set = ['`state` = ?'];
         $params = [$state->value];
         if ($triggerDateTime) {
             $set[] = '`trigger_at` = ?';
-            $params[] = $triggerDateTime;
+            $params[] = $triggerDateTime->format('Y-m-d H:i:s');
+        }
+
+        if ($rule) {
+            $set[] = '`rule` = ?';
+            $params[] = $rule->toString();
         }
 
         $stmt = $this->pdo->prepare(sprintf(
@@ -104,7 +113,8 @@ final class PdoScheduleStore implements ScheduleStore
             $this->messagesTableName,
             implode(', ', $set),
         ));
-        $stmt->execute($params + [$identifier]);
+        $params[] = $identifier;
+        $stmt->execute($params);
     }
 
     public function deleteSchedule(string $identifier): void
@@ -130,7 +140,7 @@ final class PdoScheduleStore implements ScheduleStore
         $params = [ScheduleState::Pending->value];
         if ($beforeDateTime !== null) {
             $where[] = '`trigger_at` < ?';
-            $params[] = $beforeDateTime;
+            $params[] = $beforeDateTime->format('Y-m-d H:i:s');
         }
 
         $sql = sprintf(

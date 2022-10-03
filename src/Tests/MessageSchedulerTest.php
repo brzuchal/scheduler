@@ -58,10 +58,10 @@ class MessageSchedulerTest extends TestCase
         $scheduler = new MessageScheduler($this->store);
         $triggerAt = (new DateTimeImmutable('now'))->add(new DateInterval('PT1S'));
         $message = new FooMessage();
-        $token = $scheduler->schedule($triggerAt, $message);
         $startDateTime = new DateTimeImmutable('today');
+        $token = $scheduler->schedule($triggerAt, $message, startDateTime: $startDateTime);
         $rule = new Rule(Freq::Yearly);
-        $scheduler->reschedule($token, $triggerAt, $message, $rule, $startDateTime);
+        $scheduler->reschedule($token, $triggerAt, $rule);
         sleep(1);
         $schedules = $this->store->findPendingSchedules(new DateTimeImmutable('now'));
         $this->assertNotEmpty($schedules);

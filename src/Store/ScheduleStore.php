@@ -34,6 +34,7 @@ interface ScheduleStore
         string $identifier,
         ScheduleState $state,
         DateTimeImmutable|null $triggerDateTime = null,
+        Rule|null $rule = null,
     ): void;
 
     /**
