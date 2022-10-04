@@ -47,7 +47,9 @@ final class SimpleScheduleExecutor implements ScheduleExecutor
 
             $this->store->updateSchedule($identifier, ScheduleState::Pending, $occurrence);
 
-            break;
+            return;
         }
+
+        $this->store->updateSchedule($identifier, ScheduleState::Completed);
     }
 }
